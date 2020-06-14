@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=divice-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="./layui/css/layui.css" media="all">
+
+    <script type="text/javascript">
+
+        // 状态码
+        const   TYPE_HUB_HISTORY  = 1
+        const   TYPE_SIGN         = 2
+        const   TYPE_HUB_ENTER    = 3
+        const   TYPE_LOG          = 4
+        const   TYPE_MSG          = 5
+        const   TYPE_END          = 6
+        const   TYPE_FILE         = 7
+
+        window.onload = function () {
+            var conn;
+            if (window["WebSocket"]) {
+                //建立websocket链接
+                conn = new WebSocket("ws://" + document.location.host + "/ws");
+
+                //关闭链接时
+                conn.onclose = function (evt) {
+                    var item = document.createElement("div");
+                    item.innerHTML = "<b>Connection closed.</b>";
+                    appendLog(item);
+                };
+
+                //收到消息时
+                conn.onmessage = function (evt) {
+                    var m = JSON.parse(evt.data)
+                    handle_messsage(m)
+                };
+
+                //链接打开时加载
+                conn.addEventListener('open', function () {
+                    var getSign = Message(TYPE_SIGN, "")
+                    conn.send(JSON.stringify(getSign))
+                    //进入房间
+                    //var enterHub = Message(TYPE_HUB_ENTER, "")
+                    //conn.send(enterHub)
+                })
+
+            } else {
+                var item = document.createElement("div");
+                item.innerHTML = "<b>Your browser does not support WebSockets.</b>";
+                appendLog(item);
+            }
+
+            function handle_messsage(m){
+                console.log(m)
+                switch (m.Header.Type) {
+                    case TYPE_HUB_HISTORY:
+                        load_history(m)
+                        break
+                    case TYPE_SIGN:
+                        load_sign(m)
+                        break
+                    case TYPE_MSG:
+                        break
+                    default:
+                }
+            }
+
+            function load_history(m) {
+                var logs = JSON.parse(m["Body"])
+                var board = document.getElementById("board")
+                var row = null
+                for (i = 0; i < logs.length; i++) {
+                    if (i % 2 === 0) {
+                        if (row != null)
+                            board.appendChild(row)
+                        row = document.createElement("div")
+                        row.setAttribute("class", "layui-row layui-col-space15")
+                        row.setAttribute("style", "margin:3em")
+                    }
+                    var name = logs[i]["Name"]
+                    var hubId = parseInt(logs[i]["Id"])
+                    var log = logs[i]["Log"]
+                    var col = document.createElement("div")
+                    col.setAttribute("class", "layui-col-md6")
+                    var card = document.createElement("div")
+                    card.setAttribute("class", "layui-card")
+                    var header = document.createElement("div")
+                    header.setAttribute("class", "layui-card-header")
+                    var a = document.createElement("a")
+                    a.setAttribute("href", "/hub.html")
+                    a.innerText = name
+                    header.appendChild(a)
+                    var body = document.createElement("div")
+                    body.setAttribute("class", "layui-card-body")
+                    body.innerText = log
+                    card.appendChild(header)
+                    card.appendChild(body)
+                    col.appendChild(card)
+                    row.appendChild(col)
+                }
+                if (row != null)
+                    board.appendChild(row)
+            }
+
+            function load_sign(m){
+                var text = m["Body"]
+                var sign = document.getElementById("sign")
+                sign.innerText = text
+            }
+
+
+            function mainPrint(m) {
+                var item = document.createElement("div");
+                item.innerText = m.Header.Time;
+                item.setAttribute("style", "color:gray;font-size:14px")
+                appendLog(item);
+                item = document.createElement("div");
+                item.innerText = m.Header.UserName + ": " + m.Body;
+                item.setAttribute("style", "color:black;font-size:20px")
+                appendLog(item);
+            }
+
+            function getTime() {
+                var t = Date.now()
+                var date = new Date(t)
+                Y = date.getFullYear() + '-';
+                M = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-';
+                D = date.getDate() + ' ';
+                h = date.getHours() + ':';
+                m = date.getMinutes() + ':';
+                s = date.getSeconds();
+                return Y+M+D+h+m+s
+            }
+
+
+            function Message (type, body){
+                var obj = {}
+                obj["Type"] = type
+                obj["Time"] = getTime()
+                obj["Body"] = body
+                return obj
+            }
+
+        };
+    </script>
+</head>
+
+<body>
+<script src="./layui/layui.js"></script>
+<script>
+    layui.use(['layer', 'form'], function(){
+        var layer = layui.layer,
+            form = layui.form
+    })
+    layui.use('element', function() {
+        var element = layui.element;
+    })
+</script>
+
+<div class="layui-layout layui-layout-admin">
+    <div class="layui-header header header-demo" summer>
+        <div class="layui-fluid">
+            <div class="layui-row" style="padding-top: 1em">
+                <div class="layui-col-lg1">
+                    <div class = "layui-main">
+                    </div>
+                </div>
+                <div class="layui-col-lg-offset5">
+                    <div class="layui-text" id="sign" style="font-size:20px;text-align: right"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="layui-side layui-bg-black">
+        <div class="layui-side-scroll">
+
+            <ul class="layui-nav layui-nav-tree site-demo-nav">
+
+                <li class="layui-nav-item layui-nav-itemed">
+                    <a class="javascript:;" href="javascript:">Hubs<span class="layui-nav-more"></span></a>
+                    <dl class="layui-nav-child">
+                        <dd class>
+                            <a href="/my">My</a>
+                        </dd>
+                        <dd class>
+                            <a href="/enter">Enter</a>
+                        </dd>
+                    </dl>
+                </li>
+
+                <li class="layui-nav-item layui-nav-itemed">
+                    <a class="javascript:;" href="javascript:;">Manage<span class="layui-nav-more"></span></a>
+                    <dl class="layui-nav-child">
+                        <dd class>
+                            <a href="/avatar">Avatar</a>
+                        </dd>
+                        <dd class>
+                            <a href="/username">Username</a>
+                        </dd>
+                        <dd class>
+                            <a href="/password">Password</a>
+                        </dd>
+                        <dd class>
+                            <a href="/sign">Sign</a>
+                        </dd>
+                    </dl>
+                </li>
+
+
+                <li class="layui-nav-item" style="height: 30px; text-align: center"></li>
+                <span class="layui-nav-bar"></span></ul>
+
+        </div>
+    </div>
+    <div class="layui-body layui-bg-gray" >
+        <div class="layui-layer-content" id="board" style="margin: 1em">
+            <div class="layui-row">
+                <div class="layui-col-lg">
+                    <h1 class="site-h1" id="hub_name" style="text-align:center">hub name  <i id="user_count" class="layui-icon layui-icon-user">count</i></h1>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div class="layui-footer footer footer-demo" summer></div>
+</div>
+</body>
+</html>

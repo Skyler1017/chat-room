@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=divice-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="./layui/css/layui.css" media="all">
+
+    <script type="text/javascript">
+
+        // 状态码
+        const   TYPE_HUB_HISTORY  = 1
+        const   TYPE_SIGN         = 2
+        const   TYPE_HUB_ENTER    = 3
+        const   TYPE_LOG          = 4
+        const   TYPE_MSG          = 5
+        const   TYPE_END          = 6
+        const   TYPE_FILE         = 7
+
+        // websocket连接
+        var conn;
+        // 房间号
+        var hub_id = {{.HubId}}
+        // 用户Id
+        var client_id = {{.ClientId}}
+        // 房间名
+        var hub_name =  {{.HubName}}
+        // 用户名
+        var client_name = {{.ClientName}}
+
+        window.onload = function () {
+            /*
+            if (window["WebSocket"]) {
+                //建立websocket链接
+                conn = new WebSocket("ws://" + document.location.host + "/ws");
+
+                //关闭链接时
+                conn.onclose = function (evt) {
+                    var item = document.createElement("div");
+                    item.innerHTML = "<b>Connection closed.</b>";
+                    appendLog(item);
+                };
+
+                //收到消息时
+                conn.onmessage = function (evt) {
+                    var m = JSON.parse(evt.data)
+                    handle_messsage(m)
+                };
+
+                //链接打开时加载
+                conn.addEventListener('open', function () {
+                    // 获取用户的足迹记录
+                    var getHistory = Message(true, TYPE_HUB_HISTORY, "")
+                    conn.send(JSON.stringify(getHistory))
+                    var getSign = Message(true, TYPE_SIGN, "")
+                    conn.send(JSON.stringify(getSign))
+                })
+
+            } else {
+                var item = document.createElement("div");
+                item.innerHTML = "<b>Your browser does not support WebSockets.</b>";
+                appendLog(item);
+            }
+            */
+            m = {{.Data}}
+            load_history(m)
+        };
+
+        function load_history(m) {
+            var logs = JSON.parse(m["Body"])
+            if(logs != null) {
+                var board = document.getElementById("board")
+                var row = null
+                for (i = 0; i < logs.length; i++) {
+                    if (i % 2 === 0) {
+                        if (row != null)
+                            board.appendChild(row)
+                        row = document.createElement("div")
+                        row.setAttribute("class", "layui-row layui-col-space15")
+                        row.setAttribute("style", "margin:3em")
+                    }
+                    var name = logs[i]["Name"]
+                    var hubId = parseInt(logs[i]["Id"])
+                    var log = logs[i]["Log"]
+                    var col = document.createElement("div")
+                    col.setAttribute("class", "layui-col-md6")
+                    var card = document.createElement("div")
+                    card.setAttribute("class", "layui-card layui-anim layui-anim-up")
+                    var header = document.createElement("div")
+                    header.setAttribute("class", "layui-card-header")
+                    var a = document.createElement("a")
+                    a.setAttribute("href", "/return?HubName=" + name)
+                    a.innerText = name
+                    header.appendChild(a)
+                    var body = document.createElement("div")
+                    body.setAttribute("class", "layui-card-body")
+                    body.innerText = log
+                    card.appendChild(header)
+                    card.appendChild(body)
+                    card.setAttribute("href", "/return?HubName=" + name)
+                    col.appendChild(card)
+                    row.appendChild(col)
+                }
+            }
+            if (row != null)
+                board.appendChild(row)
+        }
+    </script>
+</head>
+<body>
+<script src="./layui/layui.js"></script>
+<script>
+    layui.use(['layer', 'form'], function(){
+        var layer = layui.layer,
+            form = layui.form
+    })
+    layui.use('element', function() {
+        var element = layui.element;
+    })
+</script>
+
+<div class="layui-layout layui-layout-admin">
+    <div class="layui-header header header-demo" summer>
+        <div class="layui-fluid">
+            <div class="layui-row" style="padding-top: 1em">
+                <div class="layui-col-lg1">
+                    <div class = "layui-main">
+                    </div>
+                </div>
+                <div class="layui-col-lg-offset5">
+                    <div class="layui-text" id="sign" style="font-size:20px;text-align: right">{{.Sign}}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="layui-side layui-bg-black">
+        <div class="layui-side-scroll">
+
+            <ul class="layui-nav layui-nav-tree site-demo-nav">
+
+                <li class="layui-nav-item layui-nav-itemed">
+                    <a class="javascript:;" href="javascript:">Hubs<span class="layui-nav-more"></span></a>
+                    <dl class="layui-nav-child">
+                        <dd class>
+                            <a href="/my">My</a>
+                        </dd>
+                        <dd class>
+                            <a href="/enter">Enter</a>
+                        </dd>
+                    </dl>
+                </li>
+
+                <li class="layui-nav-item" style="height: 30px; text-align: center"></li>
+                <span class="layui-nav-bar"></span></ul>
+
+        </div>
+    </div>
+    <div class="layui-body layui-bg-gray" >
+        <div class="layui-tab-content clildFrame">
+            <div class="layui-layer-content" id="board" style="margin: 3em">
+            <blockquote class="layui-elem-quote layui-text">
+               最近到访过下面这些房间哦👇
+            </blockquote>
+            <fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
+                <legend>Visit History</legend>
+            </fieldset>
+            </div>
+        </div>
+    </div>
+    <div class="layui-footer footer footer-demo" summer></div>
+</div>
+<div id="page_end_html" style="position: absolute;z-index: 9998">
+
+    <title>Live2D</title>
+
+    <link rel="stylesheet" type="text/css" href="layui/http_files.cnblogs.com_files_HL-space_waifu_right.css">
+    <script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+
+
+    <link rel="stylesheet" type="text/css" href="layui/http_files.cnblogs.com_files_HL-space_waifu_right.css">
+    <div class="waifu" id="waifu">
+        <div class="waifu-tips" style="opacity: 0;">~</div>
+        <canvas id="live2d" width="280" height="250" class="live2d"></canvas>
+        <div class="waifu-tool">
+            <span class="fui-home"></span>
+            <span class="fui-eye"></span>
+            <span class="fui-user"></span>
+            <span class="fui-photo"></span>
+            <span class="fui-cross"></span>
+        </div>
+    </div>
+    <script src="layui/http_files.cnblogs.com_files_HL-space_live2d.js"></script>
+    <script src="layui/http_files.cnblogs.com_files_HL-space_my-waifu-tips.js"></script>
+    <script type="text/javascript">initModel()</script>
+
+
+    <link rel="stylesheet" type="text/css" href="layui/http_files.cnblogs.com_files_yjlblog_flat-ui.css">
+
+
+    <script type="text/javascript" language="javascript">
+
+        var linkObject = document.createElement('link');
+
+        linkObject.rel = "shortcut icon";
+
+        linkObject.href = "https://files.cnblogs.com/files/HL-space/Pikachu.ico";
+
+        document.getElementsByTagName("head")[0].appendChild(linkObject);
+
+    </script>
+</div>
+</body>
+</html>

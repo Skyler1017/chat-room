@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="./layui/css/layui.css" media="all">
+    <title>Title</title>
+</head>
+<body>
+
+<script src="./layui/layui.js"></script>
+<div class="layui-layout layui-layout-admin">
+    <!-- 顶部 -->
+    <div class="layui-header header header-demo" summer>
+        <div class="layui-fluid">
+            <div class="layui-row" style="padding-top: 1em">
+                <div class="layui-col-lg1">
+                    <div class = "layui-main">
+                    </div>
+                </div>
+                <div class="layui-col-lg-offset5">
+                    <div class="layui-text" id="sign" style="font-size:20px;text-align: right"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="layui-side layui-bg-black">
+        <div class="layui-side-scroll">
+
+            <ul class="layui-nav layui-nav-tree site-demo-nav">
+
+                <li class="layui-nav-item layui-nav-itemed">
+                    <a class="javascript:;" href="javascript:">Hubs<span class="layui-nav-more"></span></a>
+                    <dl class="layui-nav-child">
+                        <dd class>
+                            <a href="/my">My</a>
+                        </dd>
+                        <dd class>
+                            <a href="/enter">Enter</a>
+                        </dd>
+                    </dl>
+                </li>
+
+                <li class="layui-nav-item layui-nav-itemed">
+                    <a class="javascript:;" href="javascript:;">Manage<span class="layui-nav-more"></span></a>
+                    <dl class="layui-nav-child">
+                        <dd class>
+                            <a href="/avatar.html">Avatar</a>
+                        </dd>
+                        <dd class>
+                            <a href="/username.html">Username</a>
+                        </dd>
+                        <dd class>
+                            <a href="password.html">Password</a>
+                        </dd>
+                        <dd class>
+                            <a href="sign.html">Sign</a>
+                        </dd>
+                    </dl>
+                </li>
+
+
+                <li class="layui-nav-item" style="height: 30px; text-align: center"></li>
+                <span class="layui-nav-bar"></span></ul>
+
+        </div>
+    </div>
+    <!-- 右部 -->
+    <div class="layui-body layui-bg-gray">
+        <div class="layui-layer-content" id="board" style="margin: 3em;height: available;overflow-scrolling: auto">
+
+        </div>
+    </div>
+    <!-- 底部 -->
+</div>
+
+</body>
+
+</html>

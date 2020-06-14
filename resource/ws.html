@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Let's Chat!</title>
+    <script type="text/javascript">
+
+     const   TYPE_HUB_HISTORY  = 1
+     const   TYPE_HUB_SUMMARY  = 2
+     const   TYPE_HUB_ENTER    = 3
+     const   TYPE_LOG          = 4
+     const   TYPE_MSG          = 5
+     const   TYPE_END          = 6
+     const   TYPE_FILE         = 7
+
+        window.onload = function () {
+            var conn;
+            var msg = document.getElementById("msg");
+            var log = document.getElementById("log");
+            var query = window.location.search.substring(1);
+            var vars = query.split('&')
+            if (vars.length !== 2) {
+                window.location.href = '/'
+            }
+            var hub = vars[0].split('=')[1]
+            var name = vars[1].split('=')[1]
+            var index = 0
+
+
+            function getTime() {
+                var t = Date.now()
+                var date = new Date(t)
+                Y = date.getFullYear() + '-';
+                M = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-';
+                D = date.getDate() + ' ';
+                h = date.getHours() + ':';
+                m = date.getMinutes() + ':';
+                s = date.getSeconds();
+                return Y+M+D+h+m+s
+            }
+
+            document.getElementById("form").onsubmit = function () {
+                if (!conn) {
+                    window.alert("connection not available")
+                    return false;
+                }
+                if (!msg.value) {
+                    window.alert("empty message")
+                    return false;
+                }
+                //window.alert(msg.value)
+                h = Header(TYPE_MSG, hub, index, name, 0)
+                pac = Data(h, msg.value)
+                conn.send(JSON.stringify(pac));
+                msg.value = "";
+                return false;
+            };
+
+            if (window["WebSocket"]) {
+                conn = new WebSocket("ws://" + document.location.host + "/ws");
+                conn.onclose = function (evt) {
+                    var item = document.createElement("div");
+                    item.innerHTML = "<b>Connection closed.</b>";
+                    appendLog(item);
+                };
+                conn.onmessage = function (evt) {
+                    var m = JSON.parse(evt.data)
+                    index = m.Header.MsgIndex
+                    mainPrint(m)
+                };
+
+                load_history()
+
+
+            } else {
+                var item = document.createElement("div");
+                item.innerHTML = "<b>Your browser does not support WebSockets.</b>";
+                appendLog(item);
+            }
+        };
+    </script>
+    <style type="text/css">
+        html {
+            overflow: auto;
+        }
+
+        body {
+            overflow: auto;
+            width: 100%;
+            height: 100%;
+            background: dimgrey;
+        }
+
+        #log {
+            background: antiquewhite;
+            margin: 10em ;
+            padding: 0.5em 0.5em 0.5em 0.5em;
+            position : absolute;
+            size: legal;
+            top: 0.5em;
+            left: 0.5em;
+            right: 0.5em;
+            bottom: 3em;
+            overflow: scroll;
+        }
+
+        #h1 {
+            color: papayawhip;
+            text-align: center;
+        }
+
+        #form {
+            position : absolute;
+            overflow: auto;
+            left: 30em;
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="h1">
+    <h1>Let's Chat!</h1>
+</div>
+<div id="log"></div>
+<form id="form" >
+    <input type="text" id="msg" size="64"  />
+    <input type="submit" value="Send" />
+</form>
+</body>
+</html>

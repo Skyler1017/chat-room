@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="./layui/css/layui.css" media="all">
+
+    <script src="./layui/layui.js"></script>
+
+</head>
+
+<body>
+    <script src="./layui/layui.js"></script>
+    <div class="layui-layout layui-layout-admin">
+        <!-- 顶部 -->
+        <div class="layui-header header header-demo" summer>
+            <div class="layui-fluid">
+                <div class="layui-row" id="header" style="padding-top: 1em">
+                    <div class="layui-col-lg1">
+                        <div class = "layui-main">
+                        </div>
+                    </div>
+                    <div class="layui-col-md-offset6">
+                        <div class="layui-text" id="room" style="color:antiquewhite;font-size:20px;text-align: left"></div>
+                    </div>
+                    <div class="layui-col-md-offset7">
+                        <div class="layui-text" id="sign" style="font-size:20px;text-align: right">{{.Sign}}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-side layui-bg-black">
+            <div class="layui-side-scroll">
+
+                <ul class="layui-nav layui-nav-tree site-demo-nav">
+
+                    <li class="layui-nav-item layui-nav-itemed">
+                        <a class="javascript:;" href="javascript:">Hubs<span class="layui-nav-more"></span></a>
+                        <dl class="layui-nav-child">
+                            <dd class>
+                                <a href="/my">My</a>
+                            </dd>
+                            <dd class>
+                                <a href="/enter">Enter</a>
+                            </dd>
+                        </dl>
+                    </li>
+
+                    <li class="layui-nav-item" style="height: 30px; text-align: center"></li>
+                    <span class="layui-nav-bar"></span></ul>
+
+            </div>
+        </div>
+        <!-- 右部 -->
+        <div class="layui-body layui-bg-gray">
+            <div class="layui-layer-content" id="board" style="margin: 3em;height: available;overflow-scrolling: auto">
+                <blockquote class="layui-elem-quote layui-text">
+                   输入字符串进入房间
+                </blockquote>
+
+                <fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
+                    <legend>创建或进入</legend>
+                </fieldset>
+
+                <form class="layui-form" action="/enter" method="post">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">Hub Id</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="HubName" lay-verify="required" autocomplete="off" placeholder="请输入Hub Id" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-form-item" pane="">
+                        <label class="layui-form-label"></label>
+                        <div class="layui-input-block">
+                            <input type="checkbox" checked="" name="Anonymous" lay-verify="required" lay-skin="switch" lay-filter="switchTest" title="开关">
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <div class="layui-input-block">
+                            <button type="submit" class="layui-btn" data-method="offset" data-typt="auto"  lay-submit="" lay-filter="hubInfo">立即提交</button>
+                            <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- 底部 -->
+    </div>
+
+</body>
+</html>

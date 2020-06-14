@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=divice-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="./layui/css/layui.css">
+    <script src="./layui/layui.js"></script>
+    <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.0.js"></script>
+    <script>
+        layui.use(['layer', 'form'], function(){
+            var layer = layui.layer,
+                form = layui.form
+            form.on('submit(*)', function(data){
+                console.log(data.elem) //被执行事件的元素DOM对象，一般为button对象
+                console.log(data.form) //被执行提交的form对象，一般在存在form标签时才会返回
+                console.log(data.field) //当前容器的全部表单字段，名值对形式：{name: value}
+                $.post("/login",
+                    {
+                        name:$("#name").val,
+                        password:$("#password").val
+                    },
+                    function (data, status) {
+
+                    }
+                )
+                return false
+            })
+        })
+
+
+    </script>
+
+
+
+</head>
+
+<body>
+    <div class="layui-row">
+        <div class="layui-col-md12">
+            <div class="grid-demo layui-bg-green" style="font-size: 50px;padding: 30px;text-align: center">welcome</div>
+        </div>
+    </div>
+
+    <br>
+    <br>
+    <br>
+    <br>
+
+    <div class="layui-row">
+        <div class="layui-col-md4 layui-col-lg-offset4">
+            <form class="layui-form" id="form" action="/login" method="post">
+                <div class="layui-form-item" >
+                    <label class="layui-form-label">Your Name</label>
+                    <div class="layui-input-inline">
+                        <label>
+                            <input type="text" name="name" required lay-verify="required" lay-reqtext="用户名是必填项，岂能为空？" placeholder="请输入用户名" autocomplete="on" class="layui-input">
+                        </label>
+                    </div>
+                    <div class="layui-form-mid layui-word-aux">未注册的用户名自动注册</div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">Your Password</label>
+                    <div class="layui-input-inline">
+                        <label>
+                            <input type="text" name="password" required lay-verify="required" lay-reqtext="密码是必填项，岂能为空？" lay-filter="encrypt" placeholder="请输入密码" autocomplete="on" class="layui-input">
+                        </label>
+                    </div>
+                    <div class="layui-form-mid layui-word-aux">A-Z,a-z,0-9 characters</div>
+                </div>
+                <div class="layui-form-item">
+                    <div class="layui-input-block">
+                        <button class="layui-btn layui-btn-radius layui-btn-lg" lay-submit lay-filter="demo">Enter&nbspthis&nbsphub&nbsp&nbsp<i class="layui-icon layui-icon-release"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+
+
+
+</body>
+</html>

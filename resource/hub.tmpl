@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="layui/css/layui.css" media="all">
+    <title>可爱的聊天网站</title>
+    <script type="text/javascript">
+
+        // 状态码
+        const   TYPE_HUB_HISTORY  = 1
+        const   TYPE_SIGN         = 2
+        const   TYPE_HUB_ENTER    = 3
+        const   TYPE_IMG          = 4
+        const   TYPE_MSG          = 5
+        const   TYPE_END          = 6
+        const   TYPE_FILE         = 7
+
+        // websocket连接
+        var conn;
+        // 房间号
+        var hub_id = {{.HubId}}
+        // 用户Id
+        var client_id = {{.ClientId}}
+        // 房间名
+        var hub_name = {{.HubName}}
+        // 用户名
+        var client_name = {{.ClientName}}
+
+            window.onload = function () {
+                if (window["WebSocket"]) {
+                    //建立websocket链接
+                    conn = new WebSocket("ws://" + document.location.host + "/ws?" + "HubName=" + hub_name);
+
+                    //关闭链接时
+                    conn.onclose = function (evt) {
+
+                    };
+
+                    //收到消息时
+                    conn.onmessage = function (evt) {
+                        var m = JSON.parse(evt.data)
+                        handle_messsage(m)
+                    };
+
+                    /*链接打开时加载
+                    conn.addEventListener('open', function () {
+                        var Enter = Message(true, TYPE_HUB_ENTER, "hub")
+                        conn.send(JSON.stringify(Enter))
+                    })
+                    */
+
+                }
+
+                // 取消回车自动提交
+                var input = document.getElementById("input")
+                var msg = document.getElementById("input_text")
+                input.addEventListener("keydown", function(){
+                    if(event.keyCode === 13){
+                        m = Message(true, TYPE_MSG, msg.value)
+                        conn.send(JSON.stringify(m))
+                        msg.value = ""
+                        event.preventDefault()
+                    }
+                    return false;});
+
+                // 房间名称
+                document.getElementById("room").innerText = hub_name
+
+                layui.use('element', function(){
+                    var element = layui.element;
+                });
+
+                //普通图片上传
+                layui.use('upload', function() {
+                    var $ = layui.jquery
+                        , upload = layui.upload;
+                    var uploadInst = upload.render({
+                        elem: '#upload_picture'
+                        , url: '/pic?hub=' + hub_name + "&client=" + client_name //改成您自己的上传接口
+                        , done: function (res) {
+                            //处理上传结果
+                            console.log(res)
+                            //上传成功
+                            if(res.Header.Code === true){
+                                path = res.Body //请求地址
+                                return layer.msg('上传成功');
+                            } else{
+                                return layer.msg('上传失败');
+                            }
+                        }
+                    });
+                })
+
+                //文件上传
+                layui.use('upload', function() {
+                    var $ = layui.jquery
+                        , upload = layui.upload;
+                    var uploadInst = upload.render({
+                        elem: '#upload_file'
+                        , url: '/upload?hub=' + hub_name + "&client=" + client_name //改成您自己的上传接口
+                        , accept: 'file'
+                        , done: function (res) {
+                            //处理上传结果
+                            console.log(res)
+                            //上传成功
+                            if(res.Header.Code === true){
+                                path = res.Body //请求地址
+                                return layer.msg('上传成功');
+                            } else{
+                                return layer.msg('上传失败');
+                            }
+                        }
+                    });
+                })
+
+
+                // 获取时间
+                function getTime() {
+                    var t = Date.now()
+                    var date = new Date(t)
+                    Y = date.getFullYear() + '-';
+                    M = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-';
+                    D = date.getDate() + ' ';
+                    h = date.getHours() + ':';
+                    m = date.getMinutes() + ':';
+                    s = date.getSeconds();
+                    return Y+M+D+h+m+s
+                }
+
+                //生成消息
+                function Message (ok, type, body){
+                    var obj = {}
+                    var header = {}
+                    header["Code"] = ok
+                    header["Type"] = type
+                    header["Time"] = getTime()
+                    header["CId"] = client_id
+                    header["HubId"] = hub_id
+                    obj["Header"] = header
+                    obj["Body"] = body
+                    return obj
+                }
+
+                // 收到 ws 消息时进行处理
+                function handle_messsage(m){
+                    console.log(m)
+                    if(m.Header.Code === false){
+                        window.alert(m.Header.Type + m.Body)
+                    }
+                    switch (m.Header.Type) {
+                        case TYPE_HUB_HISTORY:
+                            show_msg(m)
+                            break
+                        case TYPE_HUB_ENTER:
+                            hub_init(m)
+                            break
+                        case TYPE_MSG:
+                            show_msg(m)
+                            break
+                        case TYPE_IMG:
+                            show_img(m)
+                            break
+                        case TYPE_FILE:
+                            show_file(m)
+                            break
+                        default:
+                    }
+                }
+
+                // 收到 message 消息时进行显示
+                function show_msg(m){
+                    var chat_box = document.getElementById("chat_box")
+                    var message_box = document.createElement("div")
+                    message_box.style.backgroundColor = "antique-white"
+                    message_box.setAttribute("class", "layui-anim layui-anim-up")
+                    var item = document.createElement("label");
+                    item.innerText = m["Header"]["Client"] + "  " +m["Header"]["Time"] + '\n'
+                    message_box.append(item)
+                    item = document.createElement("label");
+                    item.innerText = m["Body"] + '\n\n'
+                    message_box.append(item)
+                    chat_box.append(message_box)
+                    message_box.scrollIntoView()
+                }
+
+                // 收到图片消息进行显示
+                function show_img(m) {
+                    var chat_box = document.getElementById("chat_box")
+                    var message_box = document.createElement("div")
+                    message_box.setAttribute("class", "layui-anim layui-anim-up")
+                    var item = document.createElement("label");
+                    item.innerText = m["Header"]["Client"] + "  " +m["Header"]["Time"] + '\n'
+                    message_box.append(item)
+                    item = document.createElement("label");
+                    inner_html = "<img src='" + m.Body + "' alt='?' width='300'/>"
+                    item.innerHTML = inner_html
+                    message_box.append(item)
+                    item = document.createElement("label")
+                    item.innerHTML = "<br>"
+                    message_box.append(item)
+                    message_box.scrollIntoView()
+                    chat_box.append(message_box)
+                }
+
+                // 收到文件消息进行处理
+                function show_file(m){
+                    var chat_box = document.getElementById("chat_box")
+                    var message_box = document.createElement("div")
+                    message_box.setAttribute("class", "layui-anim layui-anim-up")
+                    var item = document.createElement("label");
+                    item.innerText = m["Header"]["Client"] + "  " +m["Header"]["Time"] + '\n'
+                    message_box.append(item)
+                    item = document.createElement("label");
+                    inner_html = "<a href=" + m["Body"] + ">" + m["Body"] + "</a>" + "\n\n"
+                    item.innerHTML = inner_html
+                    message_box.append(item)
+                    chat_box.append(message_box)
+                }
+
+                layui.use('element', function() {
+                    var element = layui.element;
+                })
+
+                layui.use('upload', function(){
+                    var upload = layui.upload;
+
+                    //执行实例
+                    upload.render({
+                        elem: '#upload' //绑定元素
+                        ,url: '/upload/' //上传接口
+                        ,done: function(res){
+                            //上传完毕回调
+                            layer.msg('上传成功');
+                            console.log(res)
+                        }
+                        ,error: function(){
+                            //请求异常回调
+                        }
+                    });
+                });
+
+            };
+
+    </script>
+
+</head>
+<div id="page_end_html" style="position:absolute;z-index: 9998">
+
+    <title>Live2D</title>
+
+    <link rel="stylesheet" type="text/css" href="layui/http_files.cnblogs.com_files_HL-space_waifu_right.css">
+    <script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+
+
+    <link rel="stylesheet" type="text/css" href="layui/http_files.cnblogs.com_files_HL-space_waifu_right.css">
+    <div class="waifu" id="waifu">
+        <div class="waifu-tips" style="opacity: 0;">~</div>
+        <canvas id="live2d" width="280" height="250" class="live2d"></canvas>
+        <div class="waifu-tool">
+            <span class="fui-home"></span>
+            <span class="fui-eye"></span>
+            <span class="fui-user"></span>
+            <span class="fui-photo"></span>
+            <span class="fui-cross"></span>
+        </div>
+    </div>
+    <script src="layui/http_files.cnblogs.com_files_HL-space_live2d.js"></script>
+    <script src="layui/http_files.cnblogs.com_files_HL-space_my-waifu-tips.js"></script>
+    <script type="text/javascript">initModel()</script>
+
+
+    <link rel="stylesheet" type="text/css" href="layui/http_files.cnblogs.com_files_yjlblog_flat-ui.css">
+
+
+    <script type="text/javascript" language="javascript">
+
+        var linkObject = document.createElement('link');
+
+        linkObject.rel = "shortcut icon";
+
+        linkObject.href = "https://files.cnblogs.com/files/HL-space/Pikachu.ico";
+
+        document.getElementsByTagName("head")[0].appendChild(linkObject);
+
+    </script>
+</div>
+
+<body>
+<script src="layui/layui.js"></script>
+<div class="layui-layout layui-layout-admin">
+    <!-- 顶部 -->
+    <div class="layui-header header header-demo" summer>
+        <div class="layui-fluid">
+            <div class="layui-row" id="header" style="padding-top: 1em">
+                <div class="layui-col-lg1">
+                    <div class = "layui-main">
+                    </div>
+                </div>
+                <div class="layui-col-md-offset6">
+                    <div class="layui-text" id="room" style="color:antiquewhite;font-size:20px;text-align: left"></div>
+                </div>
+                <div class="layui-col-md-offset7">
+                    <div class="layui-text" id="sign" style="font-size:20px;text-align: right">{{.Sign}}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="layui-side layui-bg-black">
+        <div class="layui-side-scroll">
+
+            <ul class="layui-nav layui-nav-tree site-demo-nav">
+
+                <li class="layui-nav-item layui-nav-itemed">
+                    <a class="javascript:;" href="javascript:">Hubs<span class="layui-nav-more"></span></a>
+                    <dl class="layui-nav-child">
+                        <dd class>
+                            <a href="/my">My</a>
+                        </dd>
+                        <dd class>
+                            <a href="/enter">Enter</a>
+                        </dd>
+                    </dl>
+                </li>
+
+
+
+                <li class="layui-nav-item" style="height: 30px; text-align: center"></li>
+                <span class="layui-nav-bar"></span></ul>
+
+        </div>
+    </div>
+    <!-- 右部 -->
+    <div class="layui-body layui-bg-gray">
+        <div class="layui-layer-content" id="board" style="margin: 3em;height: available;overflow-scrolling: auto">
+            <div id="main">
+                <div id="chat_box" style="margin-bottom: 150px">
+                </div>
+                <form class="layui-form layui-form-pane layui-anim layui-anim-scaleSpring" id="input" style="position: fixed; bottom: 0;"><div class="layui-form-item layui-form-text">
+                        <label class="layui-form-label" style="height:50px">
+                            <div class="layui-upload">
+                                <button type="button" class="layui-btn layui-btn-primary " id="upload_picture">
+                                    <i class="layui-icon layui-icon-face-smile-b" style="font-size: 35px"></i>
+                                </button>
+                                <input class="layui-upload-file" type="file" accept="" name="file">
+                                <button type="button" class="layui-btn layui-btn-primary " id="upload_file">
+                                    <i class="layui-icon layui-icon-upload-circle" style="font-size: 35px"></i>
+                                </button>
+                                <input class="layui-upload-file" type="file" accept="" name="file">
+                            </div>
+                        </label>
+                        <div class="layui-input-block">
+                            <textarea id="input_text" rows="3" placeholder="请输入内容" class="layui-textarea"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- 底部 -->
+</div>
+
+</body>
+</html>
